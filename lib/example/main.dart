@@ -1,4 +1,4 @@
-import 'package:design_patterns/design_patterns/state_pattern_example.dart';
+import 'package:design_patterns/example/state_pattern_example.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -3,27 +3,151 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final isLoggedInProvider = StateProvider<bool>((ref) => false);
-final userTokenProvider = StateProvider<String>((ref) => '');
-final usernameProvider = StateProvider<String>((ref) => '');
-final userRoleProvider = StateProvider<String>((ref) => '');
-final _usernameController =
-    StateProvider<TextEditingController>((ref) => TextEditingController(text: ''));
-final _passwordController =
-    StateProvider<TextEditingController>((ref) => TextEditingController(text: ''));
+extension type UserToken(String value) {}
+extension type Username(String value) {}
 
-
-void main(){
-  runApp();
+enum UserRole {
+  admin,
+  user,
 }
 
+abstract class UserAuthState<T> {
+  T toSignedIn();
+  T toSignedOut();
+}
 
-abstract class LoadingManager {
-  static final LoadingManager _loadingInstance = LoadingManagerImpl();
-  factory LoadingManager() => _loadingInstance;
+class UserSignedIn implements UserAuthState<UserAuthState> {
+  @override
+  UserAuthState toSignedIn() => this;
 
-  Future<R> showLoading<R>(BuildContext context, Future<R> Function() process);
-  void errorLoading(BuildContext context, dynamic error);
+  @override
+  UserAuthState toSignedOut() => UserSignedOut();
+}
+
+class UserSignedOut implements UserAuthState<UserAuthState> {
+  @override
+  UserAuthState toSignedIn() => UserSignedIn();
+
+  @override
+  UserAuthState toSignedOut() => this;
+}
+
+class UserModel implements UserAuthState<UserModel> {
+  final UserToken token;
+  final Username username;
+  final UserRole role;
+  final UserAuthState state;
+
+  UserModel({
+    required this.token,
+    required this.username,
+    required this.role,
+    required this.state,
+  });
+
+  bool get isSignedIn => state is UserSignedIn;
+
+  UserModel copyWith({
+    required UserToken? token,
+    required Username? username,
+    required UserRole? role,
+    required UserAuthState? state,
+  }) =>
+      UserModel(
+        token: token ?? this.token,
+        username: username ?? this.username,
+        role: role ?? this.role,
+        state: state ?? this.state,
+      );
+
+  @override
+  UserModel toSignedIn() => UserModel(
+        token: token,
+        username: username,
+        role: role,
+        state: state.toSignedIn(),
+      );
+
+  @override
+  UserModel toSignedOut() => UserModel(
+        token: token,
+        username: username,
+        role: role,
+        state: state.toSignedOut(),
+      );
+}
+
+final authenticationProvider = NotifierProvider<UserModel?, >{}
+
+final _usernameController = StateProvider<TextEditingController>(
+    (ref) => TextEditingController(text: ''));
+final _passwordController = StateProvider<TextEditingController>(
+    (ref) => TextEditingController(text: ''));
+
+class InvalidFormStateException implements Exception {
+  final FormState? formState;
+
+  InvalidFormStateException(this.formState);
+
+  @override
+  String toString() => 'The form state of ${formState} was not found';
+}
+
+abstract class LoginScreenController {
+  GlobalKey<FormState> get formKey;
+  TextEditingController get usernameController;
+  TextEditingController get passwordController;
+
+  Future<void> onLoginButtonPressed(WidgetRef ref);
+}
+
+abstract class DialogManager {
+  Future<void> showUserMessage(WidgetRef ref);
+}
+
+class LoginScreenControllerImpl implements LoginScreenController {
+
+  @override
+  final formKey = GlobalKey<FormState>();
+
+  @override
+  final usernameController = TextEditingController();
+
+  @override
+  final passwordController = TextEditingController();
+
+  @override
+  Future<void> onLoginButtonPressed(WidgetRef ref) async {
+    final formState = ref.read(formKey.notifier).state.currentState;
+    if (formState == null) {
+      throw InvalidFormStateException(formState);
+    }
+
+    if (!formState.validate()) return;
+
+    AuthManager authManager = ref.read();
+    DialogManager dialogManager = ref.read();
+    RouterManger routerManger = ref.read();
+
+    final success = await LoadingManager().showLoading(
+      ref.context,
+      () async {
+        return await authManager.login(
+          ref.read(_usernameController).text,
+          ref.read(_passwordController).text,
+          ref,
+        );
+      },
+    );
+
+    if (success) {
+      await routerManger.goToHomeScreen(ref);
+    } else {
+      await dialogManager.showUserMessage(
+        ref,
+      );
+    }
+  }
 }
 
 abstract class AuthenticationApi {
@@ -41,16 +165,6 @@ abstract class AuthenticationApi {
   Future<void> signOutUser({
     required WidgetRef ref,
   });
-}
-
-abstract class AuthManager implementsProvider {
-  static AuthManager? _instance;
-  factory AuthManager({required AuthenticationApi api}) => _instance ??= AuthManagerImpl(
-        authenticationApi: api,
-      );
-
-  Future<bool> login(String username, String password, WidgetRef ref);
-  Future<bool> logout(WidgetRef ref);
 }
 
 class AuthManagerImpl implements AuthManager {
@@ -95,17 +209,15 @@ class AuthenticationApiImpl implements AuthenticationApi {
 
   @override
   Future<void> signOutUser({required WidgetRef ref}) async {
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      ref.read(isLoggedInProvider.notifier).state = false;
-      ref.read(userTokenProvider.notifier).state = '';
-      ref.read(usernameProvider.notifier).state = '';
-      ref.read(userRoleProvider.notifier).state = '';
-      ref.read(_usernameController.notifier).state = TextEditingController(text: '');
-      ref.read(_passwordController.notifier).state = TextEditingController(text: '');
-    } catch (e) {
-      debugPrint('$e    eeeeeeeeeee');
-    }
+    await Future.delayed(const Duration(seconds: 1));
+    ref.read(isLoggedInProvider.notifier).state = false;
+    ref.read(userTokenProvider.notifier).state = '';
+    ref.read(usernameProvider.notifier).state = '';
+    ref.read(userRoleProvider.notifier).state = '';
+    ref.read(_usernameController.notifier).state =
+        TextEditingController(text: '');
+    ref.read(_passwordController.notifier).state =
+        TextEditingController(text: '');
   }
 
   @override
@@ -127,7 +239,8 @@ class AuthenticationApiImpl implements AuthenticationApi {
 
 class LoadingManagerImpl implements LoadingManager {
   @override
-  Future<R> showLoading<R>(BuildContext context, Future<R> Function() process) async {
+  Future<R> showLoading<R>(
+      BuildContext context, Future<R> Function() process) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -158,20 +271,15 @@ class LoadingManagerImpl implements LoadingManager {
 }
 
 class StatePatternLoginScreen extends ConsumerStatefulWidget {
-  const StatePatternLoginScreen({super.key, required this.authManager,});
-
-  final AuthManager authManager;
+  const StatePatternLoginScreen({super.key});
 
   @override
-  ConsumerState<StatePatternLoginScreen> createState() => _StatePatternLoginScreenState();
+  ConsumerState<StatePatternLoginScreen> createState() =>
+      _StatePatternLoginScreenState();
 }
 
-abstract class LoginScreenController{
-  final formKey=
-}
-
-
-class _StatePatternLoginScreenState extends ConsumerState<StatePatternLoginScreen> {
+class _StatePatternLoginScreenState
+    extends ConsumerState<StatePatternLoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -191,7 +299,8 @@ class _StatePatternLoginScreenState extends ConsumerState<StatePatternLoginScree
                   labelText: 'Username',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => value!.isEmpty ? 'Please enter username' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter username' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -201,31 +310,12 @@ class _StatePatternLoginScreenState extends ConsumerState<StatePatternLoginScree
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
-                validator: (value) => value!.isEmpty ? 'Please enter password' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter password' : null,
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    LoadingManager().showLoading(
-                      context,
-                      () async {
-                        return await .login(
-                          ref.read(_usernameController).text,
-                          ref.read(_passwordController).text,
-                          ref,
-                        );
-                      },
-                    ).then((isLoggedIn) {
-                      if (!isLoggedIn) return;
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const StatePatternHomeScreen()),
-                        (route) => false,
-                      );
-                    });
-                  }
-                },
+                onPressed: () {},
                 child: const Text('Login'),
               ),
             ],
@@ -244,9 +334,7 @@ class _StatePatternLoginScreenState extends ConsumerState<StatePatternLoginScree
 }
 
 class StatePatternHomeScreen extends ConsumerWidget {
-  const StatePatternHomeScreen({super.key, required this.authManager,});
-
-  final AuthManager authManager;
+  const StatePatternHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -265,7 +353,8 @@ class StatePatternHomeScreen extends ConsumerWidget {
                 return await AuthManager(api: AuthenticationApi()).logout(ref);
               }).then((_) => Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => StatePatternLoginScreen(authManager: authManager)),
+                    MaterialPageRoute(
+                        builder: (context) => const StatePatternLoginScreen()),
                     (route) => false,
                   ));
             },
