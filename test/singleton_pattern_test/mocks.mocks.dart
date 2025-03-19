@@ -5,8 +5,7 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i2;
 
-import 'package:design_patterns/design_patterns/singleton_pattern_example.dart'
-    as _i3;
+import 'package:design_patterns/design_patterns/singleton_pattern_example.dart' as _i3;
 import 'package:flutter/material.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i5;
@@ -110,7 +109,7 @@ class MockAuthenticationApi extends _i1.Mock implements _i3.AuthenticationApi {
     required String? username,
     required String? password,
     required String? role,
-    required _i3.UserState? userState,
+    required _i3.UserModel? userState,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
