@@ -1,10 +1,19 @@
-import 'package:design_patterns/state_pattern_example/app_routes/route_pages.dart';
-import 'package:design_patterns/state_pattern_example/app_routes/route_paths.dart';
+import 'package:design_patterns/app_routes/route_pages.dart';
+import 'package:design_patterns/app_routes/route_paths.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
+
+import 'design_patterns/model_view_controller_pattern/controller/student_controller.dart';
 
 void main() {
-  runApp(const ProviderScope(child: MyApp())); // Wrap with ProviderScope
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => StudentController()),
+      ],
+      child: const MyApp(),
+    ),
+  ); // Wrap with ProviderScope
 }
 
 class MyApp extends StatelessWidget {
@@ -15,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       onGenerateRoute: AppRouter.generateRoute,
-      initialRoute: RoutePaths.login,
+      initialRoute: RoutePaths.pageControlButtons,
       title: 'Flutter Demo',
       theme: ThemeData(
         // This is the theme of your application.

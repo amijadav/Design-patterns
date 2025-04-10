@@ -7,4 +7,17 @@ class InvalidTokenException implements AuthException {
   }
 }
 
+class InvalidNameException implements AuthException {
+  @override
+  String toString() {
+    return '';
+  }
+}
+class InvalidRoleException implements AuthException {
+  @override
+  String toString() {
+    return '';
+  }
+}
+
 class InvalidActionException implements AuthException {}

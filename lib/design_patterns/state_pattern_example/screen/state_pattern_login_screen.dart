@@ -1,7 +1,8 @@
-import 'package:design_patterns/state_pattern_example/app_routes/route_paths.dart';
-import 'package:design_patterns/state_pattern_example/manager/auth_manager/auth_manager.dart';
-import 'package:design_patterns/state_pattern_example/manager/loading_manager/loading_manager.dart';
-import 'package:design_patterns/state_pattern_example/service/authentication_api_service.dart';
+import 'package:design_patterns/app_routes/route_paths.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/manager/auth_manager/auth_manager.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/manager/loading_manager/loading_manager.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/service/authentication_api_service.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/states/user_state/user_state.dart';
 import 'package:flutter/material.dart';
 
 class StatePatternLoginScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _StatePatternLoginScreenState extends State<StatePatternLoginScreen> {
         context,
         () async {
           return await authManager.login(
-            usernameController.text,
+            UserName(usernameController.text),
             passwordController.text,
           );
         },
