@@ -1,7 +1,7 @@
-import 'package:design_patterns/state_pattern_example/app_routes/route_paths.dart';
-import 'package:design_patterns/state_pattern_example/manager/auth_manager/auth_manager.dart';
-import 'package:design_patterns/state_pattern_example/manager/loading_manager/loading_manager.dart';
-import 'package:design_patterns/state_pattern_example/service/authentication_api_service.dart';
+import 'package:design_patterns/app_routes/route_paths.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/manager/auth_manager/auth_manager.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/manager/loading_manager/loading_manager.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/service/authentication_api_service.dart';
 import 'package:flutter/material.dart';
 
 class StatePatternHomeScreen extends StatelessWidget {
@@ -10,7 +10,7 @@ class StatePatternHomeScreen extends StatelessWidget {
 
   void handleLogout(BuildContext context) {
     LoadingManager().showLoading(context, () async {
-      return await authManager.logoutAction();
+      return await authManager.logout();
     }).then((_) {
       if (context.mounted) {
         Navigator.pushNamedAndRemoveUntil(context, RoutePaths.login, (route) => false);

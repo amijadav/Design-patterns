@@ -1,5 +1,5 @@
 
-import 'package:design_patterns/state_pattern_example/manager/loading_manager/loading_manager.dart';
+import 'package:design_patterns/design_patterns/state_pattern_example/manager/loading_manager/loading_manager.dart';
 import 'package:flutter/material.dart';
 
 class LoadingManagerImpl implements LoadingManager {
