@@ -8,7 +8,7 @@ import 'mocks.mocks.dart';
 void main() {
   late AuthManagerImpl authManager;
   late MockAuthenticationApi mockAuthApi;
-  late UserModel userState;
+  late UserState userState;
   setUp(() {
     mockAuthApi = MockAuthenticationApi();
     authManager = AuthManagerImpl(
@@ -24,7 +24,8 @@ void main() {
         password: anyNamed('password'),
         role: anyNamed('role'),
         userState: anyNamed('userState'),
-      )).thenAnswer((_) async => {'token': 'mock_token', 'username': 'test_user', 'role': 'user'});
+      )).thenAnswer((_) async =>
+          {'token': 'mock_token', 'username': 'test_user', 'role': 'user'});
 
       final authManager = AuthManager(api: mockAuthApi);
       final result = await authManager.login('username', 'password');
@@ -33,18 +34,16 @@ void main() {
     });
 
     test('User should be able to logout successfully', () async {
-      // Arrange
       when(mockAuthApi.signOutUser()).thenAnswer((_) async {
         return;
       });
 
-      // Act
       final authManager = AuthManager(api: mockAuthApi);
       final result = await authManager.logout();
 
-      // Assert
       expect(result, true, reason: 'The user was not successfully logged out');
-      expect(userState.isLoggedIn, false, reason: 'User is still marked as logged in');
+      expect(userState.isLoggedIn, false,
+          reason: 'User is still marked as logged in');
       expect(userState.userToken, '', reason: 'User token was not cleared');
       // expect(userState.username, '', reason: 'Username was not cleared');
       expect(userState.userRole, '', reason: 'User role was not cleared');
