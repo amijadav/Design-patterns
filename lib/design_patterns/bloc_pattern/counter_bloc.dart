@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/widgets.dart';
 
@@ -41,7 +40,6 @@ abstract class Bloc<Input extends BlocEvent, Output extends StatePattern> {
   final _inputController = StreamController<Input>();
 
   Stream<Output> get counterStream => outputController.stream;
-  Sink<Input> get counterEventSink => _inputController.sink;
 
   @mustCallSuper
   void dispose() {
