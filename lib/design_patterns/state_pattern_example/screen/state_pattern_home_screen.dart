@@ -13,7 +13,8 @@ class StatePatternHomeScreen extends StatelessWidget {
       return await authManager.logout();
     }).then((_) {
       if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, RoutePaths.login, (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, RoutePaths.login.value, (route) => false);
       }
     });
   }

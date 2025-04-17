@@ -1,15 +1,21 @@
+extension type const ScreenPath(String value) {}
+
 sealed class RoutePaths {
-  static const String login = '/login';
-  static const String home = '/home';
-  static const String modelViewPattern = '/modelViewPattern';
-  static const String factoryPattern = '/factoryPattern';
-  static const String mvvmPattern = '/mvvmPattern';
-  static const String blocPattern = '/blocPattern';
-  static const String decoratorPattern = '/decoratorPattern';
-  static const String pageControlButtons = '/pageControlButtons';
-  static const String compositePattern = '/compositePattern';
-  static const String blocPatternFlutter = "/blocPatternFlutter";
-  static const String builderPattern = "/builderPattern";
-  static const String singletonPattern = "/singletonPattern";
-  static const String abstractFactoryPattern = "/abstractFactoryPattern";
+  static const ScreenPath login = ScreenPath('/login');
+  static const ScreenPath home = ScreenPath('/home');
+  static const ScreenPath modelViewPattern = ScreenPath('/modelViewPattern');
+  static const ScreenPath factoryPattern = ScreenPath('/factoryPattern');
+  static const ScreenPath mvvmPattern = ScreenPath('/mvvmPattern');
+  static const ScreenPath blocPattern = ScreenPath('/blocPattern');
+  static const ScreenPath decoratorPattern = ScreenPath('/decoratorPattern');
+  static const ScreenPath pageControlButtons =
+      ScreenPath('/pageControlButtons');
+  static const ScreenPath compositePattern = ScreenPath('/compositePattern');
+  static const ScreenPath blocPatternFlutter =
+      ScreenPath('/blocPatternFlutter');
+  static const ScreenPath builderPattern = ScreenPath('/builderPattern');
+  static const ScreenPath singletonPattern = ScreenPath('/singletonPattern');
+  static const ScreenPath abstractFactoryPattern =
+      ScreenPath('/abstractFactoryPattern');
+  static const ScreenPath observerPattern = ScreenPath('/observerPattern');
 }
