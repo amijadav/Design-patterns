@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/widgets.dart';
 
@@ -41,7 +40,6 @@ abstract class Bloc<Input extends BlocEvent, Output extends StatePattern> {
   final _inputController = StreamController<Input>();
 
   Stream<Output> get counterStream => outputController.stream;
-  Sink<Input> get counterEventSink => _inputController.sink;
 
   @mustCallSuper
   void dispose() {
@@ -98,13 +96,12 @@ class HasValueState extends CounterState {
 
   @override
   CounterState decrementAction() {
-    return state > 1 ? HasValueState(state - 1) : ZeroState();
+    return state == 1 ? ZeroState() : HasValueState(state - 1);
   }
 
   @override
   CounterState incrementAction() {
-    final newState = state + 1;
-    return newState >= 10 ? OverTen(newState) : HasValueState(newState);
+    return state == 9 ? OverTen(10) : HasValueState(state + 1);
   }
 
   @override
@@ -121,8 +118,7 @@ class OverTen extends CounterState {
   @override
   CounterState decrementAction() {
     if (state == 10) return HasValueState(9);
-    final newState = state - 2;
-    return newState >= 10 ? OverTen(newState) : HasValueState(9);
+    return OverTen(state - 2);
   }
 
   @override

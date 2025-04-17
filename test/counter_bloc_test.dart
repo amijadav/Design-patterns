@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:design_patterns/design_patterns/bloc_pattern/counter_bloc.dart';
 import 'package:design_patterns/design_patterns/bloc_pattern/counter_event.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class DefaultClass extends CounterEvent {}
 
 void main() {
   group('Counter Application Tests', () {
@@ -8,6 +12,73 @@ void main() {
 
     setUp(() {
       bloc = NewCounterBloc();
+    });
+
+    tearDown(() {
+      bloc.dispose();
+    });
+
+    group('Stream Tests', () {
+      test('counterStream emits initial state', () async {
+        final stateValue = await bloc.counterStream.first;
+
+        expect(stateValue, isA<ZeroState>());
+        expect(bloc.currentState.state, equals(0));
+      });
+      test('increment then decrement emits correct states', () async {
+        final emittedStates = <CounterState>[];
+        bloc.counterStream.listen(emittedStates.add);
+
+        bloc.fireEvent(IncrementEvent());
+        await Future.delayed(Duration.zero);
+        expect(emittedStates.last, isA<HasValueState>());
+        expect(bloc.currentState.state, equals(1));
+
+        bloc.fireEvent(IncrementEvent());
+        await Future.delayed(Duration.zero);
+        expect(emittedStates.last, isA<HasValueState>());
+        expect(bloc.currentState.state, equals(2));
+
+        bloc.fireEvent(IncrementEvent());
+        await Future.delayed(Duration.zero);
+        expect(emittedStates.last, isA<HasValueState>());
+        expect(bloc.currentState.state, equals(3));
+
+        bloc.fireEvent(DecrementEvent());
+        await Future.delayed(Duration.zero);
+        expect(emittedStates.last, isA<HasValueState>());
+        expect(bloc.currentState.state, equals(2));
+
+        bloc.fireEvent(DecrementEvent());
+        await Future.delayed(Duration.zero);
+        expect(emittedStates.last, isA<HasValueState>());
+        expect(bloc.currentState.state, equals(1));
+
+        bloc.fireEvent(ResetEvent());
+        await Future.delayed(Duration.zero);
+        expect(emittedStates.last, isA<ZeroState>());
+        expect(bloc.currentState.state, equals(0));
+
+        expect(emittedStates.length, equals(7));
+      });
+    });
+    group('Event Check', () {
+      test('Event is reset', () async {
+        expect(() => bloc.inputEvents(ResetEvent()), returnsNormally);
+      });
+
+      test('Event is increment', () async {
+        expect(() => bloc.inputEvents(IncrementEvent()), returnsNormally);
+      });
+
+      test('Event is decrement', () async {
+        expect(() => bloc.inputEvents(DecrementEvent()), returnsNormally);
+      });
+
+      test('Event is unimplemented', () async {
+        expect(() => bloc.inputEvents(DefaultClass()),
+            throwsA(isA<UnimplementedError>()));
+      });
     });
 
     group('Starting from zero', () {
