@@ -62,8 +62,9 @@ class PageControlButtons extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Main page")),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Wrap(
+          direction: Axis.vertical,
+          spacing: 20,
           children: [
             ElevatedButton(
               onPressed: () => modelViewPattern(context),
