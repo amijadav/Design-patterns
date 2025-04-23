@@ -4,66 +4,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-typedef KeyboardEvent<T> = ({LogicalKeyboardKey key, T value});
-
-class KeyboardController {
-  late final StreamSubscription subscription;
-  final LogicalKeyboardKey key;
-  final Color color;
-
-  KeyboardController({required this.key, required this.color}) {
-    subscription = Observer().subscribeToKeyEvents(key, _onNewKeyboardEvent);
-  }
-
-  void _onNewKeyboardEvent(KeyboardEvent<bool> event) {
-    final isDown = event.value;
-    Observer().addNewColorEvent((key: key, value: isDown ? color : null));
-  }
-}
-
-class Observer {
-  static Observer? _instance;
-
-  factory Observer() => _instance ??= Observer._internal();
-  Observer._internal();
-
-  final Map<LogicalKeyboardKey, StreamController<KeyboardEvent<bool>>>
-      keyListeners = {};
-
-  final Map<LogicalKeyboardKey, StreamController<KeyboardEvent<Color?>>>
-      colorListeners = {};
-
-  StreamSubscription subscribeToKeyEvents(
-      LogicalKeyboardKey key, Function(KeyboardEvent<bool>) listener) {
-    return keyListeners
-        .putIfAbsent(key, () => StreamController.broadcast())
-        .stream
-        .listen(listener);
-  }
-
-  getColorStream(LogicalKeyboardKey key) {
-    return colorListeners
-        .putIfAbsent(key, () => StreamController.broadcast())
-        .stream;
-  }
-
-  void addNewKeyEvent(KeyEvent event) {
-    final key = event.logicalKey;
-    final listeners = keyListeners[key];
-    if (listeners == null) return;
-
-    final isDown = event is KeyDownEvent;
-    listeners.add((key: key, value: isDown));
-  }
-
-  void addNewColorEvent(KeyboardEvent<Color?> event) {
-    final coloredKey = event.key;
-    final addNewColorListeners = colorListeners[coloredKey];
-    if (addNewColorListeners == null) return;
-    addNewColorListeners.add(event);
-  }
-}
-//Colors.primaries[Random().nextInt(Colors.primaries.length)]
+import 'game_drawing_layer.dart';
+import 'game_logic_layer.dart';
+import 'game_states.dart';
+import 'keyboard_listeners.dart';
 
 class ObserverScreenExample extends StatefulWidget {
   const ObserverScreenExample({super.key});
@@ -73,83 +17,159 @@ class ObserverScreenExample extends StatefulWidget {
 }
 
 class _ObserverScreenExampleState extends State<ObserverScreenExample> {
-  // Flutter handles raw key events here
-  void _onNewKeyEvent(KeyEvent event) => Observer().addNewKeyEvent(event);
+  final game = AZTypingGame(
+    initialKey: LogicalKeyboardKey.keyA,
+    amountOfKeys: 26,
+    onGameComplete: () {},
+    onGameReset: () {},
+  );
 
-  final List<KeyboardController> listeners = [];
-  final Map<LogicalKeyboardKey, Color?> keyStates = {};
-  final Random _random = Random();
-
-  Color _getRandomColor() {
-    return Color.fromARGB(
-      255,
-      _random.nextInt(256),
-      _random.nextInt(256),
-      _random.nextInt(256),
-    );
-  }
-
-  void setupKeyboardControllers() {
-    for (int count = 0; count < 26; count++) {
-      final key = LogicalKeyboardKey(LogicalKeyboardKey.keyA.keyId + count);
-      final color = _getRandomColor();
-      keyStates[key] = color;
-      listeners.add(KeyboardController(key: key, color: color));
-    }
-  }
+  late Timer _updateTimer;
+  late Duration _elapsed;
+  late int _pressed;
 
   @override
   void initState() {
     super.initState();
-    setupKeyboardControllers();
+    game.initialize();
+    _elapsed = Duration.zero;
+    _pressed = 0;
+
+    // Update UI every 100ms
+    _updateTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      setState(() {
+        _elapsed = game.elapsedTime;
+        _pressed = game.keysPressed;
+      });
+    });
   }
 
   @override
   void dispose() {
-    listeners.clear();
+    game.dispose();
+    _updateTimer.cancel();
     super.dispose();
+  }
+
+  String getGameMessage(GameState state) {
+    if (state is WaitForStartState) return 'Press A to start!';
+    if (state is PlayingState) return 'Type the alphabet in order!';
+    if (state is GameCompleteState) return '🎉 Finished! Great job!';
+    if (state is GameOverState) return '❌ Oops! Try again.';
+    return '';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Virtual Keyboard')),
-      body: KeyboardListener(
-        focusNode: FocusNode()..requestFocus(),
-        autofocus: true,
-        onKeyEvent: _onNewKeyEvent,
-        child: Center(
-          child: Wrap(
-            children: List.generate(27, (count) {
-              LogicalKeyboardKey currentKey =
-                  LogicalKeyboardKey(LogicalKeyboardKey.keyA.keyId + count);
-              return StreamBuilder<KeyboardEvent<Color?>>(
-                  stream: Observer().getColorStream(currentKey),
-                  builder: (context, snapshot) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 100),
-                        width: 60,
-                        height: 60,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: snapshot.data?.value ?? Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.black),
-                        ),
-                        child: Text(
-                          currentKey.keyLabel.toUpperCase(),
-                          style: const TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
-                      ),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 800),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                getGameMessage(game.currentGameState),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Time: ${(_elapsed.inMilliseconds / 1000).toStringAsFixed(2)}s',
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Keys Pressed: $_pressed / ${game.amountOfKeys}',
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                children: List.generate(
+                  game.amountOfKeys,
+                  (count) {
+                    LogicalKeyboardKey currentKey =
+                        LogicalKeyboardKey(game.initialKey.keyId + count);
+                    return StreamBuilder<KeyboardEvent<Color?>>(
+                      stream: game.getColorStream(currentKey),
+                      builder: (context, snapshot) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 100),
+                            width: 60,
+                            height: 60,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: snapshot.data?.value ?? Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.black),
+                            ),
+                            child: Text(
+                              currentKey.keyLabel.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     );
-                  });
-            }),
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+}
+
+class AZTypingGame {
+  final GameDrawerLayer drawerLayer;
+  final GameLogicLayer logicLayer;
+
+  GameState get currentGameState => logicLayer.currentGameState;
+  int get amountOfKeys => logicLayer.amountOfKeys;
+  LogicalKeyboardKey get initialKey => logicLayer.initialKey;
+
+  int get keysPressed => logicLayer.keysPressed;
+  Duration get elapsedTime => logicLayer.elapsedTime;
+
+  AZTypingGame({
+    required LogicalKeyboardKey initialKey,
+    required int amountOfKeys,
+    required VoidCallback onGameComplete,
+    required VoidCallback onGameReset,
+  })  : drawerLayer = GameDrawerLayer(
+          initialKey: initialKey,
+          amountOfKeys: amountOfKeys,
+        ),
+        logicLayer = GameLogicLayer(
+          initialKey: initialKey,
+          amountOfKeys: amountOfKeys,
+          onGameComplete: onGameComplete,
+          onGameReset: onGameReset,
+        );
+
+  void initialize() {
+    drawerLayer.initialize();
+    logicLayer.initialize();
+  }
+
+  Stream<KeyboardEvent<Color?>> getColorStream(LogicalKeyboardKey key) =>
+      drawerLayer.getColorStream(key);
+
+  void dispose() {
+    drawerLayer.dispose();
+    logicLayer.dispose();
   }
 }
