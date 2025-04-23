@@ -1,89 +1,69 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 typedef KeyboardEvent<T> = ({LogicalKeyboardKey key, T value});
 
-final instance = KeyboardController();
-
 class KeyboardController {
   late final StreamSubscription subscription;
+  final LogicalKeyboardKey key;
+  final Color color;
 
-  // Map to track which keys are currently pressed
-  final Map<LogicalKeyboardKey, Color?> keyStates = {
-    for (int count = 0; count < 26; count++)
-      LogicalKeyboardKey(LogicalKeyboardKey.keyA.keyId + count): null
-  };
-
-  KeyboardController() {
-    subscription = Observer.subscribeToKeyEvents(setKeyState);
+  KeyboardController({required this.key, required this.color}) {
+    subscription = Observer().subscribeToKeyEvents(key, _onNewKeyboardEvent);
   }
 
-  void _onNewColorEvent(LogicalKeyboardKey key, bool isDown, Color? color) {
-    Observer.addNewColorEvent((key: key, value: isDown ? color : null));
-  }
-
-  // Call this on key press/release
-  void setKeyState(KeyEvent event) {
-    final key = event.logicalKey;
-    final isDown = event is KeyDownEvent;
-    if (keyStates.containsKey(key)) {
-      if (key == LogicalKeyboardKey.keyA) {
-        _onNewColorEvent(key, isDown, Colors.greenAccent);
-        return;
-      }
-      if (key == LogicalKeyboardKey.keyS) {
-        _onNewColorEvent(key, isDown, Colors.blue);
-        return;
-      }
-      if (key == LogicalKeyboardKey.keyD) {
-        _onNewColorEvent(key, isDown, Colors.amber);
-        return;
-      }
-      if (key == LogicalKeyboardKey.keyF) {
-        _onNewColorEvent(key, isDown, Colors.brown);
-        return;
-      }
-      if (key == LogicalKeyboardKey.keyU) {
-        _onNewColorEvent(key, isDown, Colors.deepOrange);
-        return;
-      }
-      if (key == LogicalKeyboardKey.keyT) {
-        _onNewColorEvent(key, isDown, Colors.pink);
-        return;
-      }
-      if (key == LogicalKeyboardKey.keyN) {
-        _onNewColorEvent(key, isDown, Colors.blueGrey);
-        return;
-      }
-    }
+  void _onNewKeyboardEvent(KeyboardEvent<bool> event) {
+    final isDown = event.value;
+    Observer().addNewColorEvent((key: key, value: isDown ? color : null));
   }
 }
 
 class Observer {
-  static final keyStream = StreamController<KeyEvent>.broadcast();
+  static Observer? _instance;
 
-  static StreamSubscription subscribeToKeyEvents(Function(KeyEvent) listener) {
-    return keyStream.stream.listen(listener);
+  factory Observer() => _instance ??= Observer._internal();
+  Observer._internal();
+
+  final Map<LogicalKeyboardKey, StreamController<KeyboardEvent<bool>>>
+      keyListeners = {};
+
+  final Map<LogicalKeyboardKey, StreamController<KeyboardEvent<Color?>>>
+      colorListeners = {};
+
+  StreamSubscription subscribeToKeyEvents(
+      LogicalKeyboardKey key, Function(KeyboardEvent<bool>) listener) {
+    return keyListeners
+        .putIfAbsent(key, () => StreamController.broadcast())
+        .stream
+        .listen(listener);
   }
 
-  static StreamSubscription subscribeToColorEvents(
-      Function(KeyboardEvent<Color?>) listener) {
-    return colorStream.stream.listen(listener);
+  getColorStream(LogicalKeyboardKey key) {
+    return colorListeners
+        .putIfAbsent(key, () => StreamController.broadcast())
+        .stream;
   }
 
-  static void addNewKeyEvent(KeyEvent event) {
-    keyStream.add(event);
+  void addNewKeyEvent(KeyEvent event) {
+    final key = event.logicalKey;
+    final listeners = keyListeners[key];
+    if (listeners == null) return;
+
+    final isDown = event is KeyDownEvent;
+    listeners.add((key: key, value: isDown));
   }
 
-  static final colorStream =
-      StreamController<KeyboardEvent<Color?>>.broadcast();
-
-  static void addNewColorEvent(KeyboardEvent<Color?> event) {
-    colorStream.add(event);
+  void addNewColorEvent(KeyboardEvent<Color?> event) {
+    final coloredKey = event.key;
+    final addNewColorListeners = colorListeners[coloredKey];
+    if (addNewColorListeners == null) return;
+    addNewColorListeners.add(event);
   }
 }
+//Colors.primaries[Random().nextInt(Colors.primaries.length)]
 
 class ObserverScreenExample extends StatefulWidget {
   const ObserverScreenExample({super.key});
@@ -94,7 +74,41 @@ class ObserverScreenExample extends StatefulWidget {
 
 class _ObserverScreenExampleState extends State<ObserverScreenExample> {
   // Flutter handles raw key events here
-  void _onNewKeyEvent(KeyEvent event) => Observer.addNewKeyEvent(event);
+  void _onNewKeyEvent(KeyEvent event) => Observer().addNewKeyEvent(event);
+
+  final List<KeyboardController> listeners = [];
+  final Map<LogicalKeyboardKey, Color?> keyStates = {};
+  final Random _random = Random();
+
+  Color _getRandomColor() {
+    return Color.fromARGB(
+      255,
+      _random.nextInt(256),
+      _random.nextInt(256),
+      _random.nextInt(256),
+    );
+  }
+
+  void setupKeyboardControllers() {
+    for (int count = 0; count < 26; count++) {
+      final key = LogicalKeyboardKey(LogicalKeyboardKey.keyA.keyId + count);
+      final color = _getRandomColor();
+      keyStates[key] = color;
+      listeners.add(KeyboardController(key: key, color: color));
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setupKeyboardControllers();
+  }
+
+  @override
+  void dispose() {
+    listeners.clear();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +124,7 @@ class _ObserverScreenExampleState extends State<ObserverScreenExample> {
               LogicalKeyboardKey currentKey =
                   LogicalKeyboardKey(LogicalKeyboardKey.keyA.keyId + count);
               return StreamBuilder<KeyboardEvent<Color?>>(
-                  stream: Observer.colorStream.stream,
+                  stream: Observer().getColorStream(currentKey),
                   builder: (context, snapshot) {
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
