@@ -6,47 +6,55 @@ class PageControlButtons extends StatelessWidget {
   const PageControlButtons({super.key});
 
   void modelViewPattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.modelViewPattern);
+    navigateToScreen(context, path: RoutePaths.modelViewPattern);
   }
 
   void factoryPattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.factoryPattern);
+    navigateToScreen(context, path: RoutePaths.factoryPattern);
   }
 
   void mvvmPattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.mvvmPattern);
+    navigateToScreen(context, path: RoutePaths.mvvmPattern);
   }
 
   void decoratorPattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.decoratorPattern);
+    navigateToScreen(context, path: RoutePaths.decoratorPattern);
   }
 
   void statePattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.login);
+    navigateToScreen(context, path: RoutePaths.login);
   }
 
   void compositePattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.compositePattern);
+    navigateToScreen(context, path: RoutePaths.compositePattern);
   }
 
   void blocPattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.blocPattern);
+    navigateToScreen(context, path: RoutePaths.blocPattern);
   }
 
   void blocPatternFlutter(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.blocPatternFlutter);
+    navigateToScreen(context, path: RoutePaths.blocPatternFlutter);
   }
 
   void builderPattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.builderPattern);
+    navigateToScreen(context, path: RoutePaths.builderPattern);
   }
 
   void singletonPattern(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.singletonPattern);
+    navigateToScreen(context, path: RoutePaths.singletonPattern);
   }
 
   void abstractFactoryExample(BuildContext context) {
-    Navigator.pushNamed(context, RoutePaths.abstractFactoryPattern);
+    navigateToScreen(context, path: RoutePaths.abstractFactoryPattern);
+  }
+
+  void observerExample(BuildContext context) {
+    navigateToScreen(context, path: RoutePaths.observerPattern);
+  }
+
+  void navigateToScreen(BuildContext context, {required ScreenPath path}) {
+    Navigator.pushNamed(context, path.value);
   }
 
   @override
@@ -100,6 +108,10 @@ class PageControlButtons extends StatelessWidget {
             ElevatedButton(
               onPressed: () => abstractFactoryExample(context),
               child: const Text("Abstract Factory pattern"),
+            ),
+            ElevatedButton(
+              onPressed: () => observerExample(context),
+              child: const Text("Observer pattern"),
             ),
           ],
         ),

@@ -9,7 +9,8 @@ class StatePatternLoginScreen extends StatefulWidget {
   const StatePatternLoginScreen({super.key});
 
   @override
-  State<StatePatternLoginScreen> createState() => _StatePatternLoginScreenState();
+  State<StatePatternLoginScreen> createState() =>
+      _StatePatternLoginScreenState();
 }
 
 class _StatePatternLoginScreenState extends State<StatePatternLoginScreen> {
@@ -39,13 +40,15 @@ class _StatePatternLoginScreenState extends State<StatePatternLoginScreen> {
       ).then((isLoggedIn) {
         if (!isLoggedIn) return;
         if (context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, RoutePaths.home, (route) => false);
+          Navigator.pushNamedAndRemoveUntil(
+              context, RoutePaths.home.value, (route) => false);
         }
       });
     }
   }
 
-  Widget buildTextField(TextEditingController controller, String label, {bool isPassword = false}) {
+  Widget buildTextField(TextEditingController controller, String label,
+      {bool isPassword = false}) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(

@@ -1,5 +1,6 @@
 // import 'package:design_patterns/design_patterns/bloc_pattern_flutter/bloc_pattern_flutter.dart';
 import 'package:design_patterns/design_patterns/composite_pattern/composite_pattern_example.dart';
+import 'package:design_patterns/design_patterns/observer_pattern/observer_example.dart';
 import 'package:design_patterns/design_patterns/state_pattern_example/screen/state_pattern_home_screen.dart';
 import 'package:design_patterns/design_patterns/state_pattern_example/screen/state_pattern_login_screen.dart';
 import 'package:flutter/cupertino.dart';
@@ -44,6 +45,9 @@ class AppRouter {
         return CupertinoPageRoute(builder: (ctx) => const CoffeeScreen());
       case RoutePaths.pageControlButtons:
         return CupertinoPageRoute(builder: (ctx) => const PageControlButtons());
+      case RoutePaths.observerPattern:
+        return CupertinoPageRoute(
+            builder: (ctx) => const ObserverScreenExample());
       case RoutePaths.compositePattern:
         return CupertinoPageRoute(
             builder: (ctx) => const CompositePatternExample());
