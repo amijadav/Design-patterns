@@ -1,4 +1,5 @@
 import 'package:design_patterns/design_patterns/bloc_pattern/counter_event.dart';
+import 'package:design_patterns/design_patterns/bloc_pattern/injector_adapter.dart';
 import 'package:flutter/material.dart';
 
 import '../../general_widgets/circle_btn_widget.dart';
@@ -12,23 +13,28 @@ class BlocPatternExample extends StatefulWidget {
 }
 
 class _BlocPatternExampleState extends State<BlocPatternExample> {
-  final NewCounterBloc _bloc = NewCounterBloc();
+  @override
+  void initState() {
+    InjectorAdapter().registerSingletonDependency(() => NewCounterBloc());
+    super.initState();
+  }
 
-  void onAddTap() => _bloc.fireEvent(IncrementEvent());
+  void onAddTap() => IncrementEvent().execute();
 
-  void onRemoveTap() => _bloc.fireEvent(DecrementEvent());
+  void onRemoveTap() => DecrementEvent().execute();
 
-  void onResetTap() => _bloc.fireEvent(ResetEvent());
+  void onResetTap() => ResetEvent().execute();
 
   @override
   Widget build(BuildContext context) {
+    final bloc = InjectorAdapter().get<NewCounterBloc>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('BLoC Pattern Example'),
       ),
       body: Flexible(
         child: StreamBuilder<CounterState>(
-          stream: _bloc.counterStream,
+          stream: bloc.counterStream,
           initialData: ZeroState(),
           builder: (context, snapshot) {
             return Column(
@@ -73,7 +79,8 @@ class _BlocPatternExampleState extends State<BlocPatternExample> {
 
   @override
   void dispose() {
-    _bloc.dispose();
+    final bloc = InjectorAdapter().get<NewCounterBloc>();
+    bloc.dispose();
     super.dispose();
   }
 }
