@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import 'counter_event.dart';
+import 'injector_adapter.dart';
 
 abstract class StatePattern<S> {
   final S state;
@@ -10,9 +11,14 @@ abstract class StatePattern<S> {
   StatePattern(this.state);
 }
 
-abstract class BlocEvent {}
+abstract class BlocEvent<T extends Bloc> {
+  void execute() {
+    final block = InjectorAdapter().get<T>();
+    block.fireEvent(this);
+  }
+}
 
-abstract class Bloc<Input extends BlocEvent, Output extends StatePattern> {
+abstract class Bloc<Input, Output extends StatePattern> {
   Output currentState;
 
   Bloc({required Output initialState}) : currentState = initialState {
@@ -36,8 +42,8 @@ abstract class Bloc<Input extends BlocEvent, Output extends StatePattern> {
     outputController.sink.add(currentState);
   }
 
-  final outputController = StreamController<Output>();
-  final _inputController = StreamController<Input>();
+  final outputController = StreamController<Output>.broadcast();
+  final _inputController = StreamController<Input>.broadcast();
 
   Stream<Output> get counterStream => outputController.stream;
 
