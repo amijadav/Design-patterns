@@ -18,4 +18,14 @@ sealed class RoutePaths {
   static const ScreenPath abstractFactoryPattern =
       ScreenPath('/abstractFactoryPattern');
   static const ScreenPath observerPattern = ScreenPath('/observerPattern');
+  static const ScreenPath solidPrinciple = ScreenPath('/solidPrinciple');
+  static const ScreenPath singleResponsibilityScreen =
+      ScreenPath('/singleResponsibilityScreen');
+  static const ScreenPath openCloseScreen = ScreenPath('/openCloseScreen');
+  static const ScreenPath liskovSubstitutionScreen =
+      ScreenPath('/liskovSubstitutionScreen');
+  static const ScreenPath interfaceSegregationScreen =
+      ScreenPath('/interfaceSegregationScreen');
+  static const ScreenPath dependencyInversionScreen =
+      ScreenPath('/dependencyInversionScreen');
 }

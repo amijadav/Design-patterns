@@ -3,6 +3,11 @@ import 'package:design_patterns/design_patterns/composite_pattern/composite_patt
 import 'package:design_patterns/design_patterns/observer_pattern/observer_example.dart';
 import 'package:design_patterns/design_patterns/state_pattern_example/screen/state_pattern_home_screen.dart';
 import 'package:design_patterns/design_patterns/state_pattern_example/screen/state_pattern_login_screen.dart';
+import 'package:design_patterns/solid_principles/dependency_inversion_principle/dependency_inversion_screen.dart';
+import 'package:design_patterns/solid_principles/interface_segregation_principle/interface_segregation_screen.dart';
+import 'package:design_patterns/solid_principles/liskov_substitution_principle/liskov_substitution_screen.dart';
+import 'package:design_patterns/solid_principles/open_close_principle/open_close_screen.dart';
+import 'package:design_patterns/solid_principles/solid_priciple_screen_navigations.dart';
 import 'package:flutter/cupertino.dart';
 
 // import '../design_patterns/bloc_pattern/bloc_model.dart';
@@ -16,6 +21,7 @@ import '../design_patterns/model_view_controller_pattern/screen/model_view_contr
 import '../design_patterns/model_view_view_model_pattern/view.dart';
 import '../design_patterns/singleton_pattern_example.dart';
 import '../page_control_buttons.dart';
+import '../solid_principles/single_responsibitlity_principle/single_responsibility_screen.dart';
 import 'route_paths.dart';
 
 class AppRouter {
@@ -59,6 +65,22 @@ class AppRouter {
       case RoutePaths.abstractFactoryPattern:
         return CupertinoPageRoute(
             builder: (ctx) => const AbstractFactoryExample());
+      case RoutePaths.solidPrinciple:
+        return CupertinoPageRoute(
+            builder: (ctx) => const SolidPrincipleScreenNavigations());
+      case RoutePaths.singleResponsibilityScreen:
+        return CupertinoPageRoute(
+            builder: (ctx) => SingleResponsibilityScreen());
+      case RoutePaths.openCloseScreen:
+        return CupertinoPageRoute(builder: (ctx) => OpenClosedScreen());
+      case RoutePaths.liskovSubstitutionScreen:
+        return CupertinoPageRoute(builder: (ctx) => LiskovSubstitutionScreen());
+      case RoutePaths.interfaceSegregationScreen:
+        return CupertinoPageRoute(
+            builder: (ctx) => InterfaceSegregationScreen());
+      case RoutePaths.dependencyInversionScreen:
+        return CupertinoPageRoute(
+            builder: (ctx) => DependencyInversionScreen());
       default:
         return CupertinoPageRoute(builder: (ctx) => const PageControlButtons());
     }
