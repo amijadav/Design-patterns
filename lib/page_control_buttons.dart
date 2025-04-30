@@ -53,6 +53,10 @@ class PageControlButtons extends StatelessWidget {
     navigateToScreen(context, path: RoutePaths.observerPattern);
   }
 
+  void solidPrinciple(BuildContext context) {
+    navigateToScreen(context, path: RoutePaths.solidPrinciple);
+  }
+
   void navigateToScreen(BuildContext context, {required ScreenPath path}) {
     Navigator.pushNamed(context, path.value);
   }
@@ -113,6 +117,10 @@ class PageControlButtons extends StatelessWidget {
             ElevatedButton(
               onPressed: () => observerExample(context),
               child: const Text("Observer pattern"),
+            ),
+            ElevatedButton(
+              onPressed: () => solidPrinciple(context),
+              child: const Text("Solid principle"),
             ),
           ],
         ),
